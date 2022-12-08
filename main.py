@@ -8,4 +8,4 @@ if (what_to_print == 'Вакансии'):
 elif(what_to_print=="Статистика"):
     get_stat()
 else:
-    print('льный ввод')
+    print('Неправильный ввод')
