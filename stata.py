@@ -243,6 +243,7 @@ class Report:
     self.years=self.wb.active
     self.wb.active.title="Статистика по годам"
     self.data=data.vacancies_data
+    self.prof=data.prof
     self.Load_data(data=data)
     self.wb.save("report.xlsx")
     self.save_to_pdf()
@@ -265,7 +266,7 @@ class Report:
     env = Environment(loader=FileSystemLoader('.'))
     tp = env.get_template("pdf.html")    
     pdf_tp=tp.render({"image_file":'stat.png',
-                      "prof":data.prof,
+                      "prof":self.prof,
                       "data":self.__prep_yaer_stat_to_pdf(),
                       "salarySities":list(self.data.get_top_10(self.data.salary_dynamic_city).items()),
                       "amountCities":list(self.__to_persent(self.data.get_top_10(self.data.amount_dynamic_city)).items())})
@@ -336,5 +337,7 @@ class Report:
     for col, value in dims.items():
         ws.column_dimensions[col].width = value
 
-data=InputConnect()
-rep=Report(data)
+
+def get_stat():
+  data=InputConnect()
+  rep=Report(data)
