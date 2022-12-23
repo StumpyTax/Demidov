@@ -1,25 +1,56 @@
-import csv, re, datetime,math,openpyxl,openpyxl.styles.numbers, pdfkit
+import csv
+import datetime
+import math
+import re
+from os import SEEK_END
+from typing import Any, Dict, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
+import openpyxl
+import openpyxl.styles.numbers
+import pdfkit
 from jinja2 import Environment, FileSystemLoader
-from os import SEEK_END
-from typing import Tuple,Any,Dict
 from openpyxl import Workbook
-from openpyxl.styles import Border, Side,Font, Fill
+from openpyxl.styles import Border, Fill, Font, Side
 
 
 class InputConnect:
+  '''
+  Обработка параметров вводимых пользователем.
+  
+  Attributes:
+    name (str): Имя файла, полученное от пользователя.
+    prof (str): Название профессии.
+    vacancies_data (DataSet): Данные из файла.
+  '''
   def __init__(self):
+    '''
+    Инициализирует объект InputConnect.
+
+    Получает имя файла и проффессии от пользователя. Создает графики для данных из файла.
+    '''
     self.name=input('Введите название файла: ').strip()
     self.prof=input('Введите название профессии: ').strip()
     self.vacancies_data=DataSet(self)
     self.save_graph()
 
-  def __create_bar_graph(self,fig,ax,data:dict,data2:dict,title:str,first_label:str,second_label:str)->None:
-    
+  def __create_bar_graph(self,fig,ax,data:dict,data_prof:dict,title:str,first_label:str,second_label:str)->None:
+    '''
+    Создает гистограмму из данных.
+
+    Args:
+        fig (_type_): Фигура
+        ax (_type_): Оси
+        data (dict): Данне по всем вакансиям
+        data_prof (dict): Данные по профессии
+        title (str): Заголовок гистограммы
+        first_label (str): Заголовок для данных по всем вакансиям
+        second_label (str): Заголовок для данных по профессии
+    '''
     labels = list(data.keys())
     avg_sal = list(data.values())
-    avg_prof_sal = list(data2.values())
+    avg_prof_sal = list(data_prof.values())
     x = np.arange(len(labels)) 
     width = 0.35 
 
@@ -36,7 +67,15 @@ class InputConnect:
     fig.tight_layout()
 
   def __horizontal_bar_graph(self,fig,ax,data:dict,title:str)->None:
+    '''
+    Создает горизонтальную гистограмму из данных.
 
+    Args:
+        fig (_type_): Фигура
+        ax (_type_): Оси
+        data (dict): Данные
+        title (str): Заголовок графика 
+    '''
     labels = [i.replace(' ','\n') for i in list(data.keys())]
     y_pos = np.arange(len(labels))
     values=list(data.values())
@@ -51,7 +90,15 @@ class InputConnect:
     ax.grid(visible=True,axis='x')
 
   def __pie_graph(self,fig,ax,data:dict,title:str):
-    
+    '''
+    Создает круговю диаграмму
+
+    Args:
+        fig (_type_): Фигура
+        ax (_type_): Ось
+        data (dict): Данные
+        title (str): Заголовок диаграммы
+    '''
     values=list(data.values())
     keys=list(data.keys())
     
@@ -67,26 +114,44 @@ class InputConnect:
     # plt.rc('axes', labelsize=6)
 
   def save_graph(self):
-      fig,ax=plt.subplots(2,2)
-      self.__create_bar_graph(fig,ax[0,0],self.vacancies_data.salary_dynamic,
-                                          self.vacancies_data.salary_dynamic_prof,
-                                          'Уровень зарплаты по годам','средняя з/п',f'з/п {self.prof}')
+    '''
+    Создает и сохраняет графики: две гистограммы, одну вертикальную гистограмму и одну круговю диаграмму.
+    '''
+    fig,ax=plt.subplots(2,2)
+    self.__create_bar_graph(fig,ax[0,0],self.vacancies_data.salary_dynamic,
+                                        self.vacancies_data.salary_dynamic_prof,
+                                        'Уровень зарплаты по годам','средняя з/п',f'з/п {self.prof}')
 
-      self.__create_bar_graph(fig,ax[0,1],self.vacancies_data.amount_dynamic,
-                                          self.vacancies_data.amount_dynamic_prof,
-                                          'Количество вакансий по годам','Кол-во вакансий',f'Кол-во вакансий {self.prof}')
+    self.__create_bar_graph(fig,ax[0,1],self.vacancies_data.amount_dynamic,
+                                        self.vacancies_data.amount_dynamic_prof,
+                                        'Количество вакансий по годам','Кол-во вакансий',f'Кол-во вакансий {self.prof}')
 
-      self.__horizontal_bar_graph(fig,ax[1,0],self.vacancies_data.get_top_10(self.vacancies_data.salary_dynamic_city),
-                                              'Уровень зарплат по городам')
+    self.__horizontal_bar_graph(fig,ax[1,0],self.vacancies_data.get_top_10(self.vacancies_data.salary_dynamic_city),
+                                            'Уровень зарплат по городам')
 
-      self.__pie_graph(fig,ax[1,1],self.vacancies_data.get_top_10(self.vacancies_data.amount_dynamic_city),
-                        'Доля вакансий по городам')
+    self.__pie_graph(fig,ax[1,1],self.vacancies_data.get_top_10(self.vacancies_data.amount_dynamic_city),
+                      'Доля вакансий по городам')
 
-      plt.savefig('stat.png')
+    plt.savefig('stat.png')
 
 
 class Vacancy:
+  '''
+  Вакансия
+
+  Attributes:
+    name (str): Название вакансии.
+    salary (Salary): Зарплата.
+    area_name (str): Название города.
+    date (datetime): Дата публикации вакансии.
+  '''
   def __init__(self,v:dict)->None:
+    '''
+    Инициализирует объект Vacancy. Проводит первичную обработку данных
+
+    Args:
+        v (dict): Данные по вакансии
+    '''
     vac=self.__clear(v)
     self.name=vac['name']
     self.salary=Salary(vac=vac)
@@ -94,6 +159,15 @@ class Vacancy:
     self.date= datetime.datetime.strptime(vac['published_at'],"%Y-%m-%dT%H:%M:%S%z")
 
   def __clear(self,vac:dict)->dict:
+    '''
+    Очищает вакансию от лишних пробелов спец. символов и HTML тегов.
+
+    Args:
+        vac (dict): Вакансия
+
+    Returns:
+        dict: Очищенная вакансия
+    '''
     n_dict={}
     for item in vac.items():
       l=item[1]
@@ -106,33 +180,59 @@ class Vacancy:
     return n_dict
 
 class DataSet:
-  def __сsv_reader(self,ﬁle_name:str)->list:
-      with open(ﬁle_name,encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        res=[]
-        for row in reader:
-          if (all(row.values()) and row.values().__len__()==reader.fieldnames.__len__()):
-            vac=Vacancy(row)
-            res.append(vac)
+  '''
+  Данные из файла.
 
-        if (f.seek(0, SEEK_END)==0):
-          print('Пустой файл')
-          exit()
-        elif (res.__len__()==0):
-          print('Нет данных')
-          exit()
-        return res
+  Attributes:
+    file_name (str): Название файла.
+    vacancies_objects (List[Vacancy]): Список вакансий 
+    salary_dynamic (dict): год:зарплата
+    amount_dynamic (dict): год:кол-во вакансий
+    salary_dynamic_prof (dict): год:зарплата у профессии
+    amount_dynamic_prof (dict): год:кол-во вакансий на профессию
+    salary_dynamic_city (dict): город: средняя зарплата зарплата
+    amount_dynamic_city (dict): город: кол-во вакансий
+  '''
+  def __сsv_reader(self,ﬁle_name:str)->list[Vacancy]:
+    '''
+    Получает данные из файла.
+
+    Args:
+      file_name (str): Имя файла.
+
+    Returns:
+        list[Vacancy]: Список вакансий 
+    '''
+    with open(ﬁle_name,encoding="utf-8-sig") as f:
+      reader = csv.DictReader(f)
+      res=[]
+      for row in reader:
+        if (all(row.values()) and row.values().__len__()==reader.fieldnames.__len__()):
+          vac=Vacancy(row)
+          res.append(vac)
+
+      if (f.seek(0, SEEK_END)==0):
+        print('Пустой файл')
+        exit()
+      elif (res.__len__()==0):
+        print('Нет данных')
+        exit()
+      return res
 
   def __init__(self,data:InputConnect) -> None:
+    '''
+    Инициализирует объект DataSet.
+
+    Args:
+        data (InputConnect): Данные полученные от пользователя.
+    '''
     self.file_name =data.name
+
     self.vacancies_objects=self.__сsv_reader(data.name)
-    #Готово
     self.salary_dynamic={}
     self.amount_dynamic={}
-    #Готово
     self.salary_dynamic_prof={}
     self.amount_dynamic_prof={}
-    #
     self.salary_dynamic_city={}
     self.amount_dynamic_city={}
 
@@ -140,6 +240,12 @@ class DataSet:
 
 
   def collect_data(self,prof:str)->None:
+    '''
+    Обрабатывает данные.
+
+    Args:
+        prof (str): Название профессии.
+    '''
     city_vac_amount={}
     year_salary_summ={}
     prof_salary_sum={}
@@ -171,8 +277,9 @@ class DataSet:
       for profe in prof_salary_sum.items():
         self.salary_dynamic_prof[profe[0]]=int(math.trunc(profe[1]/self.amount_dynamic_prof[profe[0]]))
     else:
-      self.salary_dynamic_prof[vac.date.year]=0
-      self.amount_dynamic_prof[vac.date.year]=0
+      for year in year_salary_summ.keys():
+        self.salary_dynamic_prof[year]=0
+        self.amount_dynamic_prof[year]=0
       
     for sum in year_salary_summ.items():
       self.salary_dynamic[sum[0]]=int(math.trunc(sum[1]/self.amount_dynamic[sum[0]]))
@@ -183,7 +290,16 @@ class DataSet:
         self.salary_dynamic_city[city[0]]=int(math.trunc(city[1][0]/city_vac_amount[city[0]][1]))
 
 
-  def get_top_10(self,dicti:dict)->dict:
+  def get_top_10(self,dicti:dict[str,int])->dict[str,int]:
+    '''
+    Получает первые 10 наибольших значений словаря.
+
+    Args:
+        dicti (dict[str,int]): Словарь
+
+    Returns:
+        dict[str,int]: Топ 10 значений.
+    '''
     res={}
     c=dicti.__len__() if dicti.__len__()<=10 else 10
     for i in range(c):
@@ -198,6 +314,9 @@ class DataSet:
     return res
 
   def print_data(self):
+    '''
+    Выводит статистику
+    '''
     top_10_salary=self.get_top_10(self.salary_dynamic_city)
     top_10_amount=self.get_top_10(self.amount_dynamic_city)
 
@@ -211,16 +330,41 @@ class DataSet:
       print(i)
   
 class Salary:
+  '''
+  Зарплата
 
+  Attributes:
+    salary_from (str):Минимальное значение зарплаты.
+    salary_to (str):Максимальное значение зарплаты.
+    salary_currency (str): Валюта зарплаты.
+  '''
   def __init__(self,vac:dict) -> None:
+    '''
+    Инициализирует объект Salary
+
+    Args:
+        vac (dict): Вакансия
+    '''
     self.salary_from=vac['salary_from']
     self.salary_to=vac['salary_to']
     self.salary_currency=vac['salary_currency']
 
   def avg(self)->float:
-      return (float(self.salary_from)+float(self.salary_to))/2
+    '''
+    Получает ср. значение зарплаты.
+
+    Returns:
+        float: Ср. значение зарплаты.
+    '''
+    return (float(self.salary_from)+float(self.salary_to))/2
       
-  def one_cur(self):
+  def one_cur(self)->float:
+    '''
+    Переводит ср. знач. зарплаты в рубли.
+
+    Returns:
+        float: ср. знач. зарплаты в рублях
+    '''
     currency_to_rub = {
       "AZN": 35.68,  
       "BYR": 23.91,  
@@ -236,8 +380,23 @@ class Salary:
     return self.avg()*currency_to_rub[self.salary_currency]
 
 class Report:
-  
+  '''
+  Формирует отчет в формате pdf.
+
+  Attributes:
+    wb (Workbook):Excel файл.
+    cities (WokrSheet): Лист статистики по городам в excel файле.
+    years (WokrSheet): Лист статистики по годам в excel файле.
+    data (DataSet): Данные по вакансиям.
+    prof (str): Название профессии
+  '''
   def __init__(self,data:InputConnect) -> None:
+    '''
+    Инициализирует объект Report. Формирует и создает pdf файл отчета.
+
+    Args:
+        data (InputConnect): Данные.
+    '''
     self.wb=Workbook()
     self.cities=self.wb.create_sheet(title="Статистика по городам")
     self.years=self.wb.active
@@ -248,13 +407,29 @@ class Report:
     self.wb.save("report.xlsx")
     self.save_to_pdf()
   
-  def __prep_yaer_stat_to_pdf(self):
+  def __prep_yaer_stat_to_pdf(self)->list[list[str]]:
+    '''
+    Форматирование данных по годам.
+
+
+    Returns:
+        list[list[str]]: Данные по годам.
+    '''
     res=[]
     for i,year in enumerate(self.data.salary_dynamic.keys()):
       res.append([year,self.data.salary_dynamic[year],self.data.salary_dynamic_prof[year],self.data.amount_dynamic[year],self.data.amount_dynamic_prof[year]])
     return res
 
-  def __to_persent(self,dict:dict)->dict:
+  def __to_persent(self,dict:dict[str,int])->dict[str,str]:
+    '''
+    Переводит доли в проценты.
+
+    Args:
+        dict (dict[str,int]): Данные.
+
+    Returns:
+        dict[str,str]: Данные в процентах.
+    '''
     res={}
 
     for i in dict.keys():
@@ -263,6 +438,9 @@ class Report:
     return res
   
   def save_to_pdf(self):
+    '''
+    Сохраняет отчет в виде pdf файла.
+    '''
     env = Environment(loader=FileSystemLoader('.'))
     tp = env.get_template("pdf.html")    
     pdf_tp=tp.render({"image_file":'stat.png',
@@ -275,7 +453,12 @@ class Report:
     pdfkit.from_string(pdf_tp, 'report.pdf', configuration=config,options={"enable-local-file-access": ""})
 
   def Load_data(self,data:InputConnect)->None:
+    '''
+    Заполняет Excel файл данными.
 
+    Args:
+        data (InputConnect): Данные.
+    '''
     self.years.append(['Год  ', 'Средняя зарплата', f'Средняя зарплата - {data.prof}','Количество вакансий', f'Количество вакансий - {data.prof}'])
     self.cities.append(['Город',	'Уровень зарплат ','','Город', 'Доля вакансий  '])
 
@@ -312,11 +495,23 @@ class Report:
       self.cities[f'E{i}'].number_format=openpyxl.styles.numbers.BUILTIN_FORMATS[10]
 
   def __set_header_font(self,sheet)->None:
+    '''
+    Стилизует шапку таблицы.
+
+    Args:
+        sheet (Worksheet): Таблица.
+    '''
     for row in sheet.iter_rows(1):
       for cell in row:
         cell.font=Font(bold=True)
 
   def __set_border(self,sheet)->None:
+    '''
+    Стилизует границы таблицы
+
+    Args:
+        sheet (Worksheet): Таблица
+    '''
     side=Side(border_style="thin", color="000000")
     for row in sheet.rows:
       for cell in row:
@@ -326,6 +521,12 @@ class Report:
           cell.border=Border(right=side)
 
   def __set_max_width(self,sheet)->None:
+    '''
+    Устанавливает ширину заполненных ячеек таблицы.
+
+    Args:
+        sheet (Worksheet): Таблица
+    '''
     ws = sheet
     dims = {}
     dims['C']=2
@@ -337,7 +538,9 @@ class Report:
     for col, value in dims.items():
         ws.column_dimensions[col].width = value
 
-
 def get_stat():
+  '''
+  Формурет отчет.
+  '''
   data=InputConnect()
   rep=Report(data)
