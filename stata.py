@@ -2,6 +2,7 @@ import csv
 import datetime
 import math
 import re
+import doctest
 from os import SEEK_END
 from typing import Any, Dict, Tuple
 
@@ -28,12 +29,11 @@ class InputConnect:
     '''
     Инициализирует объект InputConnect.
 
-    Получает имя файла и проффессии от пользователя. Создает графики для данных из файла.
+    Получает имя файла и проффессии от пользователя.
     '''
-    self.name=input('Введите название файла: ').strip()
-    self.prof=input('Введите название профессии: ').strip()
+    self.name=input('Введите название файла: ')
+    self.prof=input('Введите название профессии: ')
     self.vacancies_data=DataSet(self)
-    self.save_graph()
 
   def __create_bar_graph(self,fig,ax,data:dict,data_prof:dict,title:str,first_label:str,second_label:str)->None:
     '''
@@ -107,11 +107,8 @@ class InputConnect:
     keys.append('Другие')
     
     wedges, texts = ax.pie(x=values,labels=keys,textprops={'fontsize': 6})
-
-    # plt.setp(texts, size=8, weight="bold")
     ax.axis('equal')
     ax.set_title(title,fontsize=8)
-    # plt.rc('axes', labelsize=6)
 
   def save_graph(self):
     '''
@@ -151,6 +148,12 @@ class Vacancy:
 
     Args:
         v (dict): Данные по вакансии
+    >>> Vacancy({'name':'','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300' }).name
+    ''
+    >>> Vacancy({'name':'','salary_from':'0','salary_to':'150','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300' }).salary.salary_from
+    '0'
+    >>> Vacancy({'name':'','salary_from':'0','salary_to':'150','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300' }).area_name
+    'Test1'
     '''
     vac=self.__clear(v)
     self.name=vac['name']
@@ -355,6 +358,12 @@ class Salary:
 
     Returns:
         float: Ср. значение зарплаты.
+    >>> Salary({'salary_from':1,'salary_to':8,'salary_currency':'RUR'}).avg()
+    4.5
+    >>> Salary({'salary_from':0,'salary_to':0,'salary_currency':'RUR'}).avg()
+    0.0
+    >>> Salary({'salary_from':1000,'salary_to':100,'salary_currency':'RUR'}).avg()
+    550.0
     '''
     return (float(self.salary_from)+float(self.salary_to))/2
       
@@ -364,6 +373,12 @@ class Salary:
 
     Returns:
         float: ср. знач. зарплаты в рублях
+    >>> Salary({'salary_from':100,'salary_to':1000,'salary_currency':'RUR'}).one_cur()
+    550.0
+    >>> Salary({'salary_from':100,'salary_to':1000,'salary_currency':'EUR'}).one_cur()
+    32945.0
+    >>> Salary({'salary_from':0,'salary_to':0,'salary_currency':'RUR'}).one_cur()
+    0.0
     '''
     currency_to_rub = {
       "AZN": 35.68,  
@@ -409,7 +424,7 @@ class Report:
   
   def __prep_yaer_stat_to_pdf(self)->list[list[str]]:
     '''
-    Форматирование данных по годам.
+    Подготовка данных по годам для переноса в Excel.
 
 
     Returns:
@@ -543,4 +558,9 @@ def get_stat():
   Формурет отчет.
   '''
   data=InputConnect()
+  data.save_graph()
   rep=Report(data)
+
+
+if(__name__=="__main__"):
+  doctest.testmod()

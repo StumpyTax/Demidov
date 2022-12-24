@@ -2,7 +2,7 @@ import csv, re, prettytable, datetime
 from os import SEEK_END
 from prettytable import PrettyTable
 from typing import List, Dict, Tuple, Any
-
+import doctest
 
 class InputConnect:
   '''
@@ -30,6 +30,7 @@ class InputConnect:
     self.fields = input('Введите требуемые столбцы: ').split(', ')
     self.fr = ''
     self.to = ''
+
     if (self.revers == ''):
         self.revers = "Нет"
     if (__numb != '' and __numb.count(' ') > 0):
@@ -37,7 +38,8 @@ class InputConnect:
     if (__numb.__len__() == 2):
         self.fr, self.to = __numb
     else:
-        self.fr = self.__numb
+        self.fr = __numb
+
     self.__validation()
     self.vacancies_data = DataSet(self)
 
@@ -304,7 +306,13 @@ class Vacancy:
     return skills.strip()
 
   def values(self) -> list:
-      return [self.name, self.description, self.key_skills, self.experience_id, self.premium, self.employer_name,
+    '''
+    Возвращает список значений полей.
+
+    Returns:
+        list: значения полей Vacancy.
+    '''
+    return [self.name, self.description, self.key_skills, self.experience_id, self.premium, self.employer_name,
               self.salary, self.area_name, self.published_at]
 
 
@@ -458,7 +466,13 @@ class Salary:
 
     Args:
         vac (dict): Вакансия
-    '''
+    >>> Salary({'salary_from':1,'salary_to':8,'salary_currency':'RUR','salary_gross':True}).salary_from
+    1
+    >>> Salary({'salary_from':1,'salary_to':8,'salary_currency':'RUR','salary_gross':True}).salary_to
+    8
+    >>> Salary({'salary_from':1,'salary_to':8,'salary_currency':'RUR','salary_gross':True}).salary_currency
+    'RUR'
+    ''' 
     self.salary_from =''
     self.salary_to = ''
     self.salary_gross = ''
@@ -576,3 +590,6 @@ def  get_vacs():
   '''
   data = InputConnect()
   data.print_vacancies()
+
+if(__name__=="__main__"):
+  doctest.testmod()
