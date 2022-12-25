@@ -1,2 +1,8 @@
-![1](https://raw.githubusercontent.com/StumpyTax/Demidov/main/tests/1.png)
-![2](https://raw.githubusercontent.com/StumpyTax/Demidov/main/tests/2.png)
+Общее время
+![Общее](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/1.png)
+strptime
+![strptime](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
+Конструктор
+![Конструктор](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
+fromisoformat
+![fromisoformat](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
