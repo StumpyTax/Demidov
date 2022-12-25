@@ -107,3 +107,17 @@ class DataSetTests(TestCase):
     data_set=DataSet(InputConnect())
     self.assertEqual(data_set.salary_dynamic_prof[2007],29166)
 
+if(__name__=="__main__"):
+  import pstats
+  from pstats import SortKey
+  import cProfile
+
+  set_keyboard_input(['s.csv','Программист'])
+  date=InputConnect()
+
+  with open('output_date_3.txt','w') as f:
+    p=pstats.Stats(stream=f)
+    for vac in date.vacancies_data.vacancies_objects:
+      cProfile.run('vac.set_date_3("2158-02-13T19:15:55+0300")', 'output.dat')
+      p.add('output.dat')
+    p.sort_stats('time').print_stats()

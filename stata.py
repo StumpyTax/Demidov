@@ -5,7 +5,7 @@ import re
 import doctest
 from os import SEEK_END
 from typing import Any, Dict, Tuple
-
+import zoneinfo
 import matplotlib.pyplot as plt
 import numpy as np
 import openpyxl
@@ -155,32 +155,43 @@ class Vacancy:
     >>> Vacancy({'name':'','salary_from':'0','salary_to':'150','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300' }).area_name
     'Test1'
     '''
-    vac=self.__clear(v)
-    self.name=vac['name']
-    self.salary=Salary(vac=vac)
-    self.area_name=vac['area_name']
-    self.date= datetime.datetime.strptime(vac['published_at'],"%Y-%m-%dT%H:%M:%S%z")
+    # vac=self.__clear(v)
+    self.name=v['name']
+    self.salary=Salary(vac=v)
+    self.area_name=v['area_name']
+    self.date= ''
+    self.set_date_3(v['published_at'])
 
-  def __clear(self,vac:dict)->dict:
-    '''
-    Очищает вакансию от лишних пробелов спец. символов и HTML тегов.
+  def set_date(self,date):
+    self.date= datetime.datetime.strptime(date,"%Y-%m-%dT%H:%M:%S%z")
 
-    Args:
-        vac (dict): Вакансия
+  def set_date_2(self,date):
+    self.date=datetime.datetime(year=int(date[0:4]),month=int(date[5:7]),day=int(date[8:10])
+                                ,hour=int(date[11:13]),minute=int(date[14:16]),second=int(date[17:19]),
+                                tzinfo=datetime.timezone(datetime.timedelta(seconds=int(date[20:]))))
+  def set_date_3(self,date):
+    self.date=datetime.datetime.fromisoformat(date)
 
-    Returns:
-        dict: Очищенная вакансия
-    '''
-    n_dict={}
-    for item in vac.items():
-      l=item[1]
-      l=re.sub(r"<[^>]+>", "",l,flags=re.S)
-      l=re.sub(r" +",' ',l)
-      l=re.sub(r"\u2002","",l)
-      l=re.sub(r"\xa0"," ",l)
-      l=l.strip()
-      n_dict[item[0]]=l
-    return n_dict
+  # def __clear(self,vac:dict)->dict:
+  #   '''
+  #   Очищает вакансию от лишних пробелов спец. символов и HTML тегов.
+
+  #   Args:
+  #       vac (dict): Вакансия
+
+  #   Returns:
+  #       dict: Очищенная вакансия
+  #   '''
+  #   n_dict={}
+  #   for item in vac.items():
+  #     l=item[1]
+  #     l=re.sub(r"<[^>]+>", "",l,flags=re.S)
+  #     l=re.sub(r" +",' ',l)
+  #     l=re.sub(r"\u2002","",l)
+  #     l=re.sub(r"\xa0"," ",l)
+  #     l=l.strip()
+  #     n_dict[item[0]]=l
+  #   return n_dict
 
 class DataSet:
   '''
