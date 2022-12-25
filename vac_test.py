@@ -9,9 +9,7 @@ from vac import DataSet
 import doctest
 import vac
 
-def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(vac))
-    return tests
+
 
 class SalaryTests(TestCase):
   def test_salary_type(self):

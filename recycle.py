@@ -1,4 +1,6 @@
 import csv
+from os import SEEK_END
+
 
 def recycle(file_name:str)->None:
   res={}
@@ -10,7 +12,14 @@ def recycle(file_name:str)->None:
           res[row['published_at'][0:4]].append(row.values())
         else:
           res[row['published_at'][0:4]]=[row.values()]
-  
+
+    if (f.seek(0, SEEK_END)==0):
+      print('Пустой файл')
+      exit()
+    elif (res.__len__()==0):
+      print('Нет данных')
+      exit()
+
   for year in res.keys():
     with open(f'.\\data\\{year}.csv', 'w', newline='' ,encoding="utf-8-sig") as f:
       w = csv.writer(f, delimiter=',',    

@@ -11,9 +11,7 @@ import doctest
 import stata
 import cProfile
 
-def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(stata))
-    return tests
+
 
 
 class SalaryTests(TestCase):
@@ -107,3 +105,14 @@ class DataSetTests(TestCase):
     data_set=DataSet(InputConnect())
     self.assertEqual(data_set.salary_dynamic_prof[2007],29166)
 
+if(__name__=="__main__"):
+  import pstats
+  from pstats import SortKey
+  import cProfile
+
+  set_keyboard_input(['v.csv','Программист'])
+  cProfile.run('stata.get_stat()', 'output.dat')
+  
+  with open('output.txt','w') as f:
+    p=pstats.Stats('output.dat',stream=f)
+    p.sort_stats('time').print_stats()

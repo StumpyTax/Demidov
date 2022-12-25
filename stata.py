@@ -1,11 +1,15 @@
 import csv
+import os
+import multiprocessing
+import recycle
+from multiprocessing import Process
 import datetime
 import math
 import re
+from os import SEEK_END
 import doctest
 from os import SEEK_END
 from typing import Any, Dict, Tuple
-import zoneinfo
 import matplotlib.pyplot as plt
 import numpy as np
 import openpyxl
@@ -193,6 +197,7 @@ class Vacancy:
   #     n_dict[item[0]]=l
   #   return n_dict
 
+
 class DataSet:
   '''
   Данные из файла.
@@ -207,7 +212,8 @@ class DataSet:
     salary_dynamic_city (dict): город: средняя зарплата зарплата
     amount_dynamic_city (dict): город: кол-во вакансий
   '''
-  def __сsv_reader(self,ﬁle_name:str)->list[Vacancy]:
+
+  def __сsv_reader(ﬁle_name:str)->list[Vacancy]:
     '''
     Получает данные из файла.
 
@@ -241,30 +247,47 @@ class DataSet:
         data (InputConnect): Данные полученные от пользователя.
     '''
     self.file_name =data.name
-
-    self.vacancies_objects=self.__сsv_reader(data.name)
+    self.prof=data.prof
+    self.len=0
+    # self.vacancies_objects=self.__сsv_reader(data.name)
     self.salary_dynamic={}
     self.amount_dynamic={}
+
     self.salary_dynamic_prof={}
     self.amount_dynamic_prof={}
+
     self.salary_dynamic_city={}
     self.amount_dynamic_city={}
 
-    self.collect_data(data.prof)
+    self.__city_vac_amount={}
+    self.__year_salary_summ={}
+    self.__prof_salary_sum={}
 
+    recycle.recycle(self.file_name)
+    self.collect_data()
 
-  def collect_data(self,prof:str)->None:
+  def collect_data_proc(self,file_name:str):
     '''
-    Обрабатывает данные.
+    Считывает данные по вакансиям из файла.
 
     Args:
-        prof (str): Название профессии.
+        file_name (str): Имя файла.
+
+    Returns:
+        _type_: Кортеж значений статистики.
     '''
-    city_vac_amount={}
+    vacancies_objects=DataSet.__сsv_reader(file_name=file_name)
+
     year_salary_summ={}
     prof_salary_sum={}
+    city_vac_amount={}
 
-    for vac in self.vacancies_objects:
+    amount_dynamic_prof={}
+    amount_dynamic={}
+    len=0
+
+    for vac in vacancies_objects:
+      len+=1
       if(vac.area_name in list(city_vac_amount.keys())):
         city_vac_amount[vac.area_name][0]+=vac.salary.one_cur()
         city_vac_amount[vac.area_name][1]+=1
@@ -273,35 +296,91 @@ class DataSet:
 
       if(vac.date.year in list(year_salary_summ.keys())):
         year_salary_summ[vac.date.year]+=vac.salary.one_cur()
-        self.amount_dynamic[vac.date.year]+=1
+        amount_dynamic[vac.date.year]+=1
       else:
         year_salary_summ[vac.date.year]=vac.salary.one_cur()
-        self.amount_dynamic[vac.date.year]=1
+        amount_dynamic[vac.date.year]=1
 
       lower_name=str.lower(vac.name)
-      if(str.lower(prof) in lower_name):
+      if(str.lower(self.prof) in lower_name):
         if(vac.date.year in list(prof_salary_sum.keys())):
           prof_salary_sum[vac.date.year]+=vac.salary.one_cur()
-          self.amount_dynamic_prof[vac.date.year]+=1
+          amount_dynamic_prof[vac.date.year]+=1
         else: 
           prof_salary_sum[vac.date.year]=vac.salary.one_cur()
-          self.amount_dynamic_prof[vac.date.year]=1
+          amount_dynamic_prof[vac.date.year]=1
 
-    if(prof_salary_sum.items().__len__()>0):
-      for profe in prof_salary_sum.items():
+    return year_salary_summ,amount_dynamic,amount_dynamic_prof,prof_salary_sum,city_vac_amount,len
+
+  def update_data(self,response):
+    '''
+    Обновляет данные по вакансиям
+
+    Args:
+        response (_type_): Данные
+    '''
+    for i in response[0].items():
+      if(i[0] in self.__year_salary_summ.keys()):
+        self.__year_salary_summ[i[0]]+=i[1]
+      else: self.__year_salary_summ[i[0]]=i[1]
+
+    for i in response[1].items():
+      if(i[0] in self.amount_dynamic.keys()):
+        self.amount_dynamic[i[0]]+=i[1]
+      else: self.amount_dynamic[i[0]]=i[1]
+
+    for i in response[2].items():
+      if(i[0] in self.amount_dynamic_prof.keys()):
+        self.amount_dynamic_prof[i[0]]+=i[1]
+      else: self.amount_dynamic_prof[i[0]]=i[1]
+      
+    for i in response[3].items():
+      if(i[0] in self.__prof_salary_sum.keys()):
+        self.__prof_salary_sum[i[0]]+=i[1]
+      else: self.__prof_salary_sum[i[0]]=i[1]
+
+    for i in response[4].items():
+      if(i[0] in self.__city_vac_amount.keys()):
+          self.__city_vac_amount[i[0]][0]+=i[1][0]
+          self.__city_vac_amount[i[0]][1]+=i[1][1]
+      else:
+          self.__city_vac_amount[i[0]]=[i[1][0],i[1][1]]
+
+
+    self.len+=response[5]
+
+
+  def collect_data(self)->None:
+    '''
+    Обрабатывает данные.
+
+    Args:
+        prof (str): Название профессии.
+    '''
+
+    names=os.listdir(f'.\\data')
+
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+      for i in range(names.__len__()):
+        p.apply_async(self.collect_data_proc,args=('.\\data\\'+names[i],),callback=self.update_data)
+      p.close()
+      p.join()
+    
+    if(self.__prof_salary_sum.items().__len__()>0):
+      for profe in self.__prof_salary_sum.items():
         self.salary_dynamic_prof[profe[0]]=int(math.trunc(profe[1]/self.amount_dynamic_prof[profe[0]]))
     else:
-      for year in year_salary_summ.keys():
+      for year in self.__year_salary_summ.keys():
         self.salary_dynamic_prof[year]=0
         self.amount_dynamic_prof[year]=0
       
-    for sum in year_salary_summ.items():
+    for sum in self.__year_salary_summ.items():
       self.salary_dynamic[sum[0]]=int(math.trunc(sum[1]/self.amount_dynamic[sum[0]]))
-    
-    for city in city_vac_amount.items():
-      self.amount_dynamic_city[city[0]]=round(city[1][1]/self.vacancies_objects.__len__(),4)
+
+    for city in self.__city_vac_amount.items():
+      self.amount_dynamic_city[city[0]]=round(city[1][1]/self.len,4)
       if(self.amount_dynamic_city[city[0]]>=0.01):
-        self.salary_dynamic_city[city[0]]=int(math.trunc(city[1][0]/city_vac_amount[city[0]][1]))
+        self.salary_dynamic_city[city[0]]=int(math.trunc(city[1][0]/self.__city_vac_amount[city[0]][1]))
 
 
   def get_top_10(self,dicti:dict[str,int])->dict[str,int]:
@@ -569,9 +648,10 @@ def get_stat():
   Формурет отчет.
   '''
   data=InputConnect()
-  data.save_graph()
-  rep=Report(data)
+  data.vacancies_data.print_data()
+  # data.save_graph()
+  # rep=Report(data)
 
 
-if(__name__=="__main__"):
-  doctest.testmod()
+# if(__name__=="__main__"):
+#   doctest.testmod()

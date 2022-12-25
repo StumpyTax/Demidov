@@ -1,5 +1,4 @@
 import csv, re, prettytable, datetime
-from os import SEEK_END
 from prettytable import PrettyTable
 from typing import List, Dict, Tuple, Any
 import doctest
