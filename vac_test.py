@@ -49,13 +49,13 @@ class VacancyTests(TestCase):
     self.assertEqual(type(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300'})).__name__,"Vacancy")
   
   def test_vacancy_date_year(self):
-    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300'}).date.year,2007)
+    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300'}).published_at.year,2007)
 
   def test_vacancy_date_month(self):
-    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'1945-12-03T19:15:55+0300'}).date.month,12)
+    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'1945-12-03T19:15:55+0300'}).published_at.month,12)
     
   def test_vacancy_date_day(self):
-    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-20T19:15:55+0300'}).date.day,20)
+    self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-20T19:15:55+0300'}).published_at.day,20)
 
   def test_vacancy_area_name(self):
     self.assertEqual(Vacancy({'name':'asdfa','salary_from':'1','salary_to':'8','salary_currency':'RUR','area_name':'Test1','published_at':'2007-12-03T19:15:55+0300'}).area_name,'Test1')
@@ -67,45 +67,29 @@ class VacancyTests(TestCase):
   
 class InputConnectTests(TestCase):
   def test_input_name(self):
-    set_keyboard_input(['test_1.csv',''])
+    set_keyboard_input(['test_1.csv','','','','',''])
     self.assertEqual(InputConnect().name,'test_1.csv')
 
-  def test_data(self):
-    set_keyboard_input(['test_1.csv','Программист'])
-    self.assertEqual(InputConnect().vacancies_data.salary_dynamic[2007],7500)
+  def test_fr_empty(self):
+    set_keyboard_input(['test_1.csv','','','','',''])
+    self.assertEqual(InputConnect().fr,'')
+  
+  def test_fr(self):
+    set_keyboard_input(['test_2.csv','','','','3',''])
+    self.assertEqual(InputConnect().fr,'3')
+
+  def test_to(self):
+    set_keyboard_input(['test_2.csv','','','','3 7',''])
+    self.assertEqual(InputConnect().to,'7')
+
+  def test_to(self):
+    set_keyboard_input(['test_2.csv','','','','3',''])
+    self.assertEqual(InputConnect().to,'')
+
 
 class DataSetTests(TestCase):
   def test_name(self):
-    set_keyboard_input(['test_2.csv',''])
+    set_keyboard_input(['test_2.csv','','','','',''])
     self.assertEqual(DataSet(InputConnect()).file_name,'test_2.csv')
 
-  def test_top_10(self):
-    set_keyboard_input(['test_2.csv',''])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.get_top_10(data_set.salary_dynamic)[2007],44295)
-
-  def test_amount_dynamic(self):
-    set_keyboard_input(['test_2.csv',''])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.amount_dynamic[2007],11)
-
-  def test_amount_dynamic_city(self):
-    set_keyboard_input(['test_2.csv',''])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.amount_dynamic_city['Екатеринбург'],0.0909)
-  
-  def test_amount_dynamic_city(self):
-    set_keyboard_input(['test_2.csv','Программист'])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.amount_dynamic_prof[2007],3)
-
-  def test_salary_dynamic_city(self):
-    set_keyboard_input(['test_2.csv','Программист'])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.salary_dynamic_city['Екатеринбург'],22500)
-
-  def test_salary_dynamic_city(self):
-    set_keyboard_input(['test_2.csv','Программист'])
-    data_set=DataSet(InputConnect())
-    self.assertEqual(data_set.salary_dynamic_prof[2007],29166)
 

@@ -9,6 +9,7 @@ from stata import DataSet
 from stata import Report
 import doctest
 import stata
+import cProfile
 
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(stata))
