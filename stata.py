@@ -162,13 +162,13 @@ class Vacancy:
     self.date= ''
     self.set_date_3(v['published_at'])
 
-  def set_date(self,date):
-    self.date= datetime.datetime.strptime(date,"%Y-%m-%dT%H:%M:%S%z")
+  # def set_date(self,date):
+  #   self.date= datetime.datetime.strptime(date,"%Y-%m-%dT%H:%M:%S%z")
 
-  def set_date_2(self,date):
-    self.date=datetime.datetime(year=int(date[0:4]),month=int(date[5:7]),day=int(date[8:10])
-                                ,hour=int(date[11:13]),minute=int(date[14:16]),second=int(date[17:19]),
-                                tzinfo=datetime.timezone(datetime.timedelta(seconds=int(date[20:]))))
+  # def set_date_2(self,date):
+  #   self.date=datetime.datetime(year=int(date[0:4]),month=int(date[5:7]),day=int(date[8:10])
+  #                               ,hour=int(date[11:13]),minute=int(date[14:16]),second=int(date[17:19]),
+  #                               tzinfo=datetime.timezone(datetime.timedelta(seconds=int(date[20:]))))
   def set_date_3(self,date):
     self.date=datetime.datetime.fromisoformat(date)
 
