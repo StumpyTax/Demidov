@@ -3,6 +3,8 @@
 strptime
 ![strptime](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
 Конструктор
-![Конструктор](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
+![Конструктор](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/3.png)
 fromisoformat
-![fromisoformat](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/2.png)
+![fromisoformat](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/4.png)
+Оптимизированно
+![Оптимизированно](https://raw.githubusercontent.com/StumpyTax/Demidov/prof/prof/5.png)
