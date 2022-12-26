@@ -1,9 +1,13 @@
 import csv
+import os
 from os import SEEK_END
 
 
 def recycle(file_name:str)->None:
   res={}
+  for file in os.listdir('.\\data'):
+    os.remove('.\\data\\'+file)
+
   with open(ﬁle_name, encoding="utf-8-sig") as f:
     reader = csv.DictReader(f)
     for row in reader:

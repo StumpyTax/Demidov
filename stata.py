@@ -18,7 +18,7 @@ import pdfkit
 from jinja2 import Environment, FileSystemLoader
 from openpyxl import Workbook
 from openpyxl.styles import Border, Fill, Font, Side
-
+import concurrent.futures
 
 class InputConnect:
   '''
@@ -266,7 +266,7 @@ class DataSet:
     recycle.recycle(self.file_name)
     self.collect_data()
 
-  def collect_data_proc(self,file_name:str):
+  def collect_data_proc(self,file_name:str)->tuple[dict, dict, dict, dict, dict, int]:
     '''
     Считывает данные по вакансиям из файла.
 
@@ -312,13 +312,14 @@ class DataSet:
 
     return year_salary_summ,amount_dynamic,amount_dynamic_prof,prof_salary_sum,city_vac_amount,len
 
-  def update_data(self,response):
+  def update_data(self,response:concurrent.futures.Future):
     '''
     Обновляет данные по вакансиям
 
     Args:
         response (_type_): Данные
     '''
+    response=response.result()
     for i in response[0].items():
       if(i[0] in self.__year_salary_summ.keys()):
         self.__year_salary_summ[i[0]]+=i[1]
@@ -360,12 +361,19 @@ class DataSet:
 
     names=os.listdir(f'.\\data')
 
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-      for i in range(names.__len__()):
-        p.apply_async(self.collect_data_proc,args=('.\\data\\'+names[i],),callback=self.update_data)
-      p.close()
-      p.join()
-    
+    # with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+    #   for i in range(names.__len__()):
+    #     p.apply_async(self.collect_data_proc,args=('.\\data\\'+names[i],),callback=self.update_data)
+    #   p.close()
+    #   p.join()
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as p:
+      for i in names:
+        f=p.submit(self.collect_data_proc,'.\\data\\'+i)
+        f.add_done_callback(self.update_data)
+      p.shutdown()
+
+
     if(self.__prof_salary_sum.items().__len__()>0):
       for profe in self.__prof_salary_sum.items():
         self.salary_dynamic_prof[profe[0]]=int(math.trunc(profe[1]/self.amount_dynamic_prof[profe[0]]))
