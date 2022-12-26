@@ -3,4 +3,4 @@
 # C multiprocessing #
 ![1](https://raw.githubusercontent.com/StumpyTax/Demidov/multi/img/after_multi.png)
 # C concurrent.futures #
-![1](https://raw.githubusercontent.com/StumpyTax/Demidov/multi/img/after_conc.png)
+![1](https://raw.githubusercontent.com/StumpyTax/Demidov/multi2/img/after_conc.png)
