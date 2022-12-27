@@ -4,6 +4,12 @@ from os import SEEK_END
 
 
 def recycle(file_name:str)->None:
+  '''
+  Считывает csv файл и разбивает на csv файлы по годам
+
+  Args:
+      file_name (str): Имя файла
+  '''
   res={}
   for file in os.listdir('.\\data'):
     os.remove('.\\data\\'+file)
@@ -22,7 +28,17 @@ def recycle(file_name:str)->None:
     elif (res.__len__()==0):
       print('Нет данных')
       exit()
+    
+    curr_conv(res)
+    
 
+def curr_conv(res):
+  '''
+  Конвертирует валюты в рубли и сохраняет в csv файлы по годам
+
+  Args:
+      res (_type_): Вакансии
+  '''
   for year in res.keys():
     fieldnames=['name','salary','area_name','published_at']
     with open(f'.\\data\\{year}.csv', 'w', newline='' ,encoding="utf-8-sig") as f:
