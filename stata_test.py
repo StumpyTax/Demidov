@@ -2,13 +2,14 @@ from input_print_mocking import set_keyboard_input
 from unittest import TestCase
 from unittest import mock
 from unittest.mock import Mock, patch
-from stata import Salary
-from stata import Vacancy
-from stata import InputConnect
-from stata import DataSet
-from stata import Report
-import doctest
-import stata
+# from stata import Salary
+# from stata import Vacancy
+# from stata import InputConnect
+# from stata import DataSet
+# from stata import Report
+# import doctest
+# import stata
+from recycle import kk
 import cProfile
 
 
@@ -111,7 +112,7 @@ if(__name__=="__main__"):
   import cProfile
 
   set_keyboard_input(['v.csv','Программист'])
-  cProfile.run('stata.get_stat()', 'output.dat')
+  cProfile.run('kk()', 'output.dat')
   
   with open('output.txt','w') as f:
     p=pstats.Stats('output.dat',stream=f)

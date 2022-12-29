@@ -34,14 +34,13 @@ def get_curs(file_name:str)->None:
           curs_freq[row['salary_currency']]+=1
         else:
           curs_freq[row['salary_currency']]=1
+          
+  data={'Date':[]}
+  for i in curs_freq.items():
+    if(i[1]>=5000):
+      data[i[0]]=[]
 
   for year in range(newest_date.year-oldest_date.year+1):
-
-    data={'Date':[]}
-    for i in curs_freq.items():
-      if(i[1]>=5000 and i[0]!="RUR"):
-        data[i[0]]=[]
-
     for i in range(1,13):
       data['Date'].append(f'{oldest_date.year+year}-{i if (i//10==1) else f"0{i}"}')
       m=str(i)
@@ -53,13 +52,13 @@ def get_curs(file_name:str)->None:
         if(j['CharCode'] not in data.keys()):
           continue
         data[j['CharCode']].append(float(j['Value'].replace(',','.'))/float(j['Nominal']))
-
+      data['RUR'].append(1)
       for j in data.keys():
         if(data[j].__len__()<data['Date'].__len__()):
           data[j].append('')
-      d=DataFrame(data)
-      d.index.rename('№',inplace=True)
-      d.to_csv(f'.\\cur\\{oldest_date.year+year}.csv',encoding="utf-8-sig")
+  d=DataFrame(data)
+  d.index.rename('№',inplace=True)
+  d.to_csv(f'.\\cur\\сur.csv',encoding="utf-8-sig")
 
 
 if (__name__=='__main__'):

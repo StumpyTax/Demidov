@@ -1,73 +1,72 @@
-import csv
 import os
-from os import SEEK_END
+import pandas
+import math
+import numpy as np
+
+curs_k=pandas.read_csv('.\\cur\\сur.csv')
+currs=curs_k.columns.values.tolist()
+# def recycle(file_name:str)->None:
+#   '''
+#   Считывает csv файл и разбивает на csv файлы по годам
+
+#   Args:
+#       file_name (str): Имя файла
+#   '''
+#   for file in os.listdir('.\\data'):
+#     os.remove('.\\data\\'+file)
 
 
-def recycle(file_name:str)->None:
-  '''
-  Считывает csv файл и разбивает на csv файлы по годам
 
-  Args:
-      file_name (str): Имя файла
-  '''
-  res={}
-  for file in os.listdir('.\\data'):
-    os.remove('.\\data\\'+file)
 
-  with open(ﬁle_name, encoding="utf-8-sig") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-      if(row['published_at'][0:4] in res.keys()):
-        res[row['published_at'][0:4]].append(list(row.values()))
-      else:
-        res[row['published_at'][0:4]]=[list(row.values())]
-
-    if (f.seek(0, SEEK_END)==0):
-      print('Пустой файл')
-      exit()
-    elif (res.__len__()==0):
-      print('Нет данных')
-      exit()
-    
-    curr_conv(res)
-    
-
-def curr_conv(res):
+def curr_conv(row):
   '''
   Конвертирует валюты в рубли и сохраняет в csv файлы по годам
 
   Args:
       res (_type_): Вакансии
   '''
-  for year in res.keys():
-    fieldnames=['name','salary','area_name','published_at']
-    with open(f'.\\data\\{year}.csv', 'w', newline='' ,encoding="utf-8-sig") as f:
-      w = csv.writer(f, delimiter=',',    
-      quotechar='|', quoting=csv.QUOTE_MINIMAL)
-      w.writerow(fieldnames)
-      curs_k={}
-      with open(f'.\\cur\\{year}.csv', encoding="utf-8-sig") as cur:
-          reader = csv.DictReader(cur)
-          for r in reader:
-            curs_k[r['Date'][5:]]=r
+  f=float(row.salary_from)
+  to=float(row.salary_to)
+  cur=row.salary_currency
 
-      for row in res[year]:
+  if (math.isnan(f) and math.isnan(to)):
+      return None
+  if (cur not in currs):
+      return None
 
-        if(row[3] not in reader.fieldnames ):
-          continue
-        k=curs_k[row[5][5:7]][row[3]]
-        
-        salary=0
-        if (row[1]=='' and row[2]=='' or k==''):
-          salary=""
-        elif (row[2]==''):
-          salary=float(row[1])*float(k)
-        elif(row[1]==''):
-          salary=float(row[2])*float(k)
-        else:
-          salary=((float(row[1])+float(row[2]))/2)*float(k)
-        w.writerow(['"'+row[0]+'"',salary,'"'+row[4]+'"','"'+row[5]+'"'])
+  k=0
+  if (cur != 'RUR'):
+    k = curs_k[curs_k["Date"] == row["published_at"][0:7]][cur].values
+    try:
+        k = float(k)
+    except:
+        return None
+  else:
+    k = 1
 
+  salary=None
+  if (math.isnan(f) or math.isnan(to)):
+    if (math.isnan(f)):
+      salary=to*k
+    else:
+      salary=f*k
+  else:
+    salary=((f+to)/2)*k
+  
+  return salary
 
 if (__name__=='__main__'):
-  recycle('vacancies_dif_currencies.csv')
+# def kk():
+  df=pandas.read_csv('vacancies_dif_currencies.csv')
+  # df=pandas.read_csv('s.csv')
+  data={"name": [], "salary": [], "area_name": [], "published_at": []}
+  ndf=pandas.DataFrame(data)
+  ndf.name=df.name
+  ndf.area_name=df.area_name
+  ndf.published_at=df.published_at
+
+  ndf.salary=(df.apply(curr_conv,axis=1))
+  ndf.to_csv('.\\data\\data.csv')
+
+  # recycle('vacancies_dif_currencies.csv') 
+  # recycle('s.csv')
